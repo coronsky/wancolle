@@ -4,8 +4,8 @@
   "start_url": ".",
   "display": "standalone",
   "background_color": "#FFF8EF",
-  "theme_color": "#BFE5D6",
-  "description": "犬友を写真付きでかわいく管理できるローカル保存対応アプリです。",
+  "theme_color": "#8FD0BC",
+  "description": "犬友だちを写真付きカードでかわいく管理できるローカル保存対応のWebアプリです。",
   "orientation": "portrait-primary",
   "prefer_related_applications": false,
   "icons": [
