@@ -2,10 +2,11 @@
   "name": "わんコレ！",
   "short_name": "わんコレ！",
   "start_url": ".",
+  "scope": ".",
   "display": "standalone",
   "background_color": "#FFF8EF",
   "theme_color": "#8FD0BC",
-  "description": "犬友だちを写真付きカードでかわいく管理できるローカル保存対応のWebアプリです。",
+  "description": "犬友だちを写真付きカードでかわいく管理できる、ローカル保存対応のWebアプリです。",
   "orientation": "portrait-primary",
   "prefer_related_applications": false,
   "icons": [
