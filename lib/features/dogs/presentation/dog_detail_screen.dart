@@ -26,7 +26,7 @@ class DogDetailScreen extends ConsumerWidget {
 
     if (dog == null) {
       return const Scaffold(
-        body: Center(child: Text('ワンコ情報が見つかりません。')),
+        body: Center(child: Text('対象のわんこが見つかりません。')),
       );
     }
     final resolvedDog = dog;
@@ -47,7 +47,12 @@ class DogDetailScreen extends ConsumerWidget {
             icon: const Icon(Icons.edit_rounded),
           ),
           IconButton(
-            tooltip: 'マイワンコ切替',
+            tooltip: '削除',
+            onPressed: () => _confirmDelete(context, ref, resolvedDog),
+            icon: const Icon(Icons.delete_outline_rounded),
+          ),
+          IconButton(
+            tooltip: 'マイワンコ切り替え',
             onPressed: () async {
               await ref.read(dogsControllerProvider.notifier).saveDog(
                     resolvedDog.copyWith(isMyDog: !resolvedDog.isMyDog),
@@ -58,7 +63,7 @@ class DogDetailScreen extends ConsumerWidget {
             ),
           ),
           IconButton(
-            tooltip: 'お気に入り切替',
+            tooltip: 'お気に入り切り替え',
             onPressed: () async {
               await ref.read(dogsControllerProvider.notifier).saveDog(
                     resolvedDog.copyWith(isFavorite: !resolvedDog.isFavorite),
@@ -84,7 +89,7 @@ class DogDetailScreen extends ConsumerWidget {
                   CircleAvatar(child: Icon(Icons.home_rounded)),
                   SizedBox(width: 12),
                   Expanded(
-                    child: Text('このプロフィールはマイワンコとして設定されています。'),
+                    child: Text('このプロフィールはマイワンコとして登録されています。'),
                   ),
                 ],
               ),
@@ -98,9 +103,9 @@ class DogDetailScreen extends ConsumerWidget {
                 Text('基本情報', style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 12),
                 _InfoLine('犬種', resolvedDog.breed),
-                _InfoLine('性別', resolvedDog.gender.label),
+                _InfoLine('性別', _genderLabel(resolvedDog.gender)),
                 _InfoLine('年齢', '${resolvedDog.age}歳'),
-                _InfoLine('誕生日', AppDateUtils.formatDate(resolvedDog.birthday)),
+                _InfoLine('誕生日', _formatOptionalDate(resolvedDog.birthday)),
                 _InfoLine(
                   '体重',
                   resolvedDog.weightKg != null ? '${resolvedDog.weightKg}kg' : '',
@@ -142,13 +147,15 @@ class DogDetailScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('会った履歴', style: Theme.of(context).textTheme.titleLarge),
+                Text('過去に会った履歴', style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 12),
                 ...resolvedDog.encounterHistory.map(
                   (entry) => ListTile(
                     contentPadding: EdgeInsets.zero,
                     leading: const CircleAvatar(child: Icon(Icons.pets_rounded)),
-                    title: Text(entry.eventName.isEmpty ? 'おでかけ記録' : entry.eventName),
+                    title: Text(
+                      entry.eventName.isEmpty ? 'おでかけ記録' : entry.eventName,
+                    ),
                     subtitle: Text(
                       '${AppDateUtils.formatDate(entry.date)}  ${entry.placeName}',
                     ),
@@ -193,13 +200,62 @@ class DogDetailScreen extends ConsumerWidget {
                     ),
                   )
                 else
-                  const Text('地図情報はまだ設定されていません。'),
+                  const Text('地図情報はまだ登録されていません。'),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    WidgetRef ref,
+    DogProfile dog,
+  ) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('カードを削除'),
+        content: Text('「${dog.name}」のカードを削除しますか？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('キャンセル'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('削除する'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true) {
+      await ref.read(dogsControllerProvider.notifier).removeDog(dog.id);
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
+    }
+  }
+
+  String _genderLabel(DogGender gender) {
+    switch (gender) {
+      case DogGender.male:
+        return '男の子';
+      case DogGender.female:
+        return '女の子';
+      case DogGender.unknown:
+        return '未設定';
+    }
+  }
+
+  String _formatOptionalDate(DateTime? date) {
+    if (date == null) {
+      return '';
+    }
+    return AppDateUtils.formatDate(date);
   }
 }
 
@@ -210,9 +266,7 @@ class _PhotoCarousel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final photos = dog.photoPaths.isEmpty
-        ? const ['placeholder']
-        : dog.photoPaths;
+    final photos = dog.photoPaths.isEmpty ? const ['placeholder'] : dog.photoPaths;
 
     return GlassCard(
       padding: const EdgeInsets.all(12),
@@ -230,7 +284,12 @@ class _PhotoCarousel extends StatelessWidget {
               child: Stack(
                 children: [
                   Positioned.fill(
-                    child: DogPhoto(photoPath: photoPath, borderRadius: 24),
+                    child: DogPhoto(
+                      photoPath: photoPath,
+                      borderRadius: 24,
+                      cacheWidth: 720,
+                      cacheHeight: 720,
+                    ),
                   ),
                   Positioned(
                     right: 16,

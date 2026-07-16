@@ -507,7 +507,7 @@ class _PhotoEditorSection extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'お気に入り写真は一覧カードに表示されます。写真ごとに差し替えもできます。',
+            'お気に入り写真は一覧カードに表示されます。写真ごとに差し替えもできます。新しく取り込む写真は自動圧縮されます。',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 12),
@@ -529,7 +529,12 @@ class _PhotoEditorSection extends StatelessWidget {
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: DogPhoto(photoPath: photoPath, borderRadius: 24),
+                        child: DogPhoto(
+                          photoPath: photoPath,
+                          borderRadius: 24,
+                          cacheWidth: 220,
+                          cacheHeight: 220,
+                        ),
                       ),
                       Positioned(
                         top: 8,

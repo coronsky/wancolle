@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dog_friend_manager/data/database/app_database.dart';
 import 'package:dog_friend_manager/data/models/dog_profile.dart';
+import 'package:dog_friend_manager/shared/services/photo_optimizer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -92,18 +93,59 @@ class DogRepository {
     }
 
     final decoded = jsonDecode(raw) as List;
+    var didOptimize = false;
+    final loadedDogs = <DogProfile>[];
+    for (final entry in decoded) {
+      final dog = DogProfile.fromMap(Map<String, dynamic>.from(entry as Map));
+      final optimizedDog = await _optimizeDogPhotos(dog);
+      if (optimizedDog != dog) {
+        didOptimize = true;
+      }
+      loadedDogs.add(optimizedDog);
+    }
+
     _webStore
       ..clear()
-      ..addAll(
-        decoded
-            .map((entry) => DogProfile.fromMap(Map<String, dynamic>.from(entry as Map)))
-            .toList(),
-      );
+      ..addAll(loadedDogs);
+
+    if (didOptimize) {
+      await _persistWebStore();
+    }
   }
 
   Future<void> _persistWebStore() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = jsonEncode(_webStore.map((dog) => dog.toMap()).toList());
     await prefs.setString(_webStorageKey, raw);
+  }
+
+  Future<DogProfile> _optimizeDogPhotos(DogProfile dog) async {
+    var didChange = false;
+    final optimizedPhotoPaths = <String>[];
+
+    for (final photoPath in dog.photoPaths) {
+      final optimized = await optimizeStoredPhoto(photoPath);
+      if (optimized != photoPath) {
+        didChange = true;
+      }
+      optimizedPhotoPaths.add(optimized);
+    }
+
+    String? optimizedFavoritePhotoPath;
+    if (dog.favoritePhotoPath != null) {
+      optimizedFavoritePhotoPath = await optimizeStoredPhoto(dog.favoritePhotoPath!);
+      if (optimizedFavoritePhotoPath != dog.favoritePhotoPath) {
+        didChange = true;
+      }
+    }
+
+    if (!didChange) {
+      return dog;
+    }
+
+    return dog.copyWith(
+      photoPaths: optimizedPhotoPaths,
+      favoritePhotoPath: optimizedFavoritePhotoPath,
+    );
   }
 }

@@ -1,21 +1,38 @@
 # わんコレ！
 
-犬友達をかわいく記録するための Flutter 製アプリです。  
-ドッグラン、犬イベント、旅行先などで出会ったワンコの情報を、写真付きカードとして保存できます。
+出会ったわんこ友達を、写真つきでかわいく記録できる Flutter 製アプリです。  
+ドッグラン、イベント、旅行先で出会った犬友をカード形式で管理できます。
 
 ## 主な機能
 
-- ワンコプロフィール登録
-- 一覧カード表示
-- 詳細表示
-- 編集機能
-- 写真の追加、差し替え、お気に入り設定
-- マイワンコ管理
+- 犬友プロフィールの登録、編集、削除
+- 写真の複数登録
+- お気に入り写真の設定
+- マイワンコ登録
 - 検索、絞り込み
+- イベント履歴、再会記録
 - ローカル保存
 - スマホ向け Web 表示
+- PWA としてホーム画面追加
 
-## 使用技術
+## 公開ページ
+
+[GitHub Pages で開く](https://coronsky.github.io/wancolle/)
+
+## ダウンロード方法
+
+1. このリポジトリを開く
+2. 右上の `Code` を押す
+3. `Download ZIP` を選ぶ
+
+Git を使う場合:
+
+```bash
+git clone https://github.com/coronsky/wancolle.git
+cd wancolle
+```
+
+## 開発環境
 
 - Flutter
 - Material 3
@@ -23,7 +40,7 @@
 - SQLite
 - SharedPreferences
 
-## 開発環境での起動
+## ローカル起動
 
 ```bash
 flutter pub get
@@ -36,18 +53,16 @@ flutter run
 flutter build web
 ```
 
-ビルド後の出力先:
+ビルド成果物:
 
 ```text
 build/web
 ```
 
-## スマホで使う方法
+## スマホで使う
 
-同じ Wi-Fi に接続した状態で、PC 側で Web サーバーを起動し、スマホからその URL にアクセスします。  
-詳細は [SMARTPHONE_MANUAL.md](C:/Users/hiro/dog_friend_manager/SMARTPHONE_MANUAL.md) を参照してください。
+- GitHub Pages を開く
+- iPhone は Safari の共有メニューから `ホーム画面に追加`
+- Android は Chrome のメニューから `ホーム画面に追加`
 
-## 補足
-
-このリポジトリには Flutter プロジェクト一式が含まれています。  
-ダウンロード後に Flutter 環境があれば、ローカルで編集、ビルド、実行できます。
+詳しい手順は [SMARTPHONE_MANUAL.md](C:/Users/hiro/dog_friend_manager/SMARTPHONE_MANUAL.md) を参照してください。

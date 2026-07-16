@@ -22,8 +22,16 @@ class DogListScreen extends ConsumerWidget {
         key: const ValueKey('dogs'),
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 110),
         children: [
-          Text('ワンコリスト', style: Theme.of(context).textTheme.headlineMedium),
+          Text(
+            'わんコレ！',
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
           const SizedBox(height: 8),
+          Text(
+            '出会ったわんこの思い出を、写真つきでかわいく整理できます。',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 16),
           TextField(
             decoration: const InputDecoration(
               prefixIcon: Icon(Icons.search_rounded),
@@ -53,8 +61,7 @@ class DogListScreen extends ConsumerWidget {
                 selected: filter.minFriendliness == 4,
                 onTap: () {
                   ref.read(dogFilterProvider.notifier).state = filter.copyWith(
-                        minFriendliness:
-                            filter.minFriendliness == 4 ? null : 4,
+                        minFriendliness: filter.minFriendliness == 4 ? null : 4,
                       );
                 },
               ),
@@ -83,7 +90,7 @@ class DogListScreen extends ConsumerWidget {
           const SizedBox(height: 18),
           if (dogs.isEmpty)
             const GlassCard(
-              child: Text('まだワンコが登録されていません。右下の登録ボタンから追加できます。'),
+              child: Text('まだ登録がありません。右下の追加ボタンから最初のわんこを登録してください。'),
             ),
           ...dogs.map(
             (dog) => Padding(
@@ -94,7 +101,9 @@ class DogListScreen extends ConsumerWidget {
         ],
       ),
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stackTrace) => Center(child: Text('読み込みエラー: $error')),
+      error: (error, stackTrace) => Center(
+        child: Text('読み込みエラー: $error'),
+      ),
     );
   }
 }
@@ -120,13 +129,13 @@ class _FilterChip extends StatelessWidget {
   }
 }
 
-class _DogCard extends StatelessWidget {
+class _DogCard extends ConsumerWidget {
   const _DogCard({required this.dog});
 
   final DogProfile dog;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final heroPhoto =
         dog.favoritePhotoPath ?? (dog.photoPaths.isEmpty ? null : dog.photoPaths.first);
 
@@ -139,7 +148,12 @@ class _DogCard extends StatelessWidget {
               SizedBox(
                 width: 96,
                 height: 112,
-                child: DogPhoto(photoPath: heroPhoto, borderRadius: 24),
+                child: DogPhoto(
+                  photoPath: heroPhoto,
+                  borderRadius: 24,
+                  cacheWidth: 240,
+                  cacheHeight: 280,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -147,39 +161,55 @@ class _DogCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: Text(
-                            dog.name,
-                            style: Theme.of(context).textTheme.titleLarge,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                dog.name,
+                                style: Theme.of(context).textTheme.titleLarge,
+                              ),
+                              const SizedBox(height: 4),
+                              Text('${dog.breed} ・ ${dog.age}歳'),
+                            ],
                           ),
                         ),
-                        if (dog.isMyDog)
-                          Container(
-                            margin: const EdgeInsets.only(right: 8),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFBFE5D6),
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: const Text(
-                              'マイワンコ',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
+                        const SizedBox(width: 8),
+                        Column(
+                          children: [
+                            if (dog.isMyDog)
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 6),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFBFE5D6),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: const Text(
+                                  'マイワンコ',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                               ),
+                            IconButton(
+                              onPressed: () => _confirmDelete(context, ref),
+                              tooltip: 'カードを削除',
+                              icon: const Icon(Icons.delete_outline_rounded),
                             ),
-                          ),
-                        if (dog.isFavorite)
-                          const Icon(Icons.star_rounded, color: Colors.amber),
+                          ],
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text('${dog.breed}  ・  ${dog.age}歳  ・  ${dog.region}'),
                     const SizedBox(height: 8),
+                    Text('住んでいる地域: ${dog.region}'),
+                    const SizedBox(height: 6),
                     Text('最後に会った日: ${AppDateUtils.formatDate(dog.lastMetDate)}'),
                     const SizedBox(height: 8),
                     Row(
@@ -234,5 +264,29 @@ class _DogCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('カードを削除'),
+        content: Text('「${dog.name}」のカードを削除しますか？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('キャンセル'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('削除する'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldDelete == true) {
+      await ref.read(dogsControllerProvider.notifier).removeDog(dog.id);
+    }
   }
 }

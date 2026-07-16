@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class DogPhoto extends StatelessWidget {
@@ -8,11 +9,15 @@ class DogPhoto extends StatelessWidget {
     super.key,
     this.fit = BoxFit.cover,
     this.borderRadius = 24,
+    this.cacheWidth,
+    this.cacheHeight,
   });
 
   final String? photoPath;
   final BoxFit fit;
   final double borderRadius;
+  final int? cacheWidth;
+  final int? cacheHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -22,12 +27,35 @@ class DogPhoto extends StatelessWidget {
     }
 
     if (path.startsWith('data:image/')) {
+      if (kIsWeb) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(borderRadius),
+          child: Image.network(
+            path,
+            fit: fit,
+            cacheWidth: cacheWidth,
+            cacheHeight: cacheHeight,
+            filterQuality: FilterQuality.none,
+            gaplessPlayback: true,
+            errorBuilder: (context, error, stackTrace) =>
+                _PlaceholderPhoto(label: path, borderRadius: borderRadius),
+          ),
+        );
+      }
+
       final commaIndex = path.indexOf(',');
       if (commaIndex > 0) {
         final bytes = base64Decode(path.substring(commaIndex + 1));
         return ClipRRect(
           borderRadius: BorderRadius.circular(borderRadius),
-          child: Image.memory(bytes, fit: fit),
+          child: Image.memory(
+            bytes,
+            fit: fit,
+            cacheWidth: cacheWidth,
+            cacheHeight: cacheHeight,
+            filterQuality: FilterQuality.none,
+            gaplessPlayback: true,
+          ),
         );
       }
     }
@@ -37,6 +65,10 @@ class DogPhoto extends StatelessWidget {
       child: Image.network(
         path,
         fit: fit,
+        cacheWidth: cacheWidth,
+        cacheHeight: cacheHeight,
+        filterQuality: FilterQuality.none,
+        gaplessPlayback: true,
         errorBuilder: (context, error, stackTrace) =>
             _PlaceholderPhoto(label: path, borderRadius: borderRadius),
       ),
