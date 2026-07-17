@@ -20,6 +20,55 @@
 
   <title>わんコレ！</title>
   <link rel="manifest" href="manifest.json">
+
+  <script>
+    (function () {
+      if (!('serviceWorker' in navigator)) {
+        return;
+      }
+
+      let hasRefreshed = false;
+
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (hasRefreshed) {
+          return;
+        }
+        hasRefreshed = true;
+        window.location.reload();
+      });
+
+      navigator.serviceWorker.addEventListener('message', function (event) {
+        if (event.data && event.data.type === 'WANCOLLE_SW_ACTIVATED' && !hasRefreshed) {
+          hasRefreshed = true;
+          window.location.reload();
+        }
+      });
+
+      window.addEventListener('load', async function () {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (!registration) {
+          return;
+        }
+
+        if (registration.waiting) {
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        }
+
+        registration.addEventListener('updatefound', function () {
+          const worker = registration.installing;
+          if (!worker) {
+            return;
+          }
+
+          worker.addEventListener('statechange', function () {
+            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+              worker.postMessage({ type: 'SKIP_WAITING' });
+            }
+          });
+        });
+      });
+    })();
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
